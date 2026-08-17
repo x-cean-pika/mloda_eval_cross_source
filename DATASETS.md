@@ -122,7 +122,45 @@ probably a worse fit for knowledge-base questions. Not investigated.
 
 ## Layer 2 — Knowledge graph
 
-### 🥇 Top pick: PrimeKG — *pending licence check*
+### 🥇 Top pick: OptimusKG
+
+Zitnik Lab, Harvard Medical School — the same group behind PrimeKG, and its successor in
+lineage if not in name. "A modern multimodal knowledge graph with type-specific metadata
+across biomedical domains."
+
+- **Code licence: MIT** ✅
+- **190,531 nodes across 10 entity types; 21,813,816 edges across 27 relation types** ✅ —
+  roughly 5× PrimeKG and 10× Hetionet on edges
+- **67,249,863 property instances encoding 110,276,843 values across 150 property keys** ✅
+- **65 integrated sources, grounded with 18 ontologies and controlled vocabularies** ✅
+- **Pushed 2026-08-16** ✅ — actively maintained, unlike every alternative here
+- Distributed as **Apache Parquet via Harvard Dataverse**, with a **Python client on PyPI**;
+  loads as **Polars DataFrames** or NetworkX graphs, with local caching ✅
+- Standardised on the BioCypher framework and the Biolink Model ✅
+
+**Why it fits this experiment better than a bigger graph normally would:**
+
+1. **Parquet and Polars are mloda-native.** mloda's core dependency is pyarrow and it ships a
+   `PolarsDataFrame` compute framework. The graph layer drops in with almost no glue.
+2. **150 property keys is where the hypothesis should be most visible.** A declarative
+   interface's advantage over query generation should widen as the attribute surface grows.
+   The baseline arm must discover and navigate 150 keys by hand; `mloda-arm` names a feature.
+   If *declaring beats generating* holds anywhere, it holds here.
+3. **Ontology grounding makes concept linkage to SNOMED, RxNorm and MeSH cleaner** than
+   hand-mapping against an ungrounded graph.
+
+⚠️ **Licence diligence is larger here, not smaller.** MIT covers the codebase. The graph
+integrates **65 upstream sources with varying licences**, and the project states explicitly
+that it "does not alter or override these source-specific licensing conditions." That is a
+bigger surface than Hetionet's 29 sources. The per-source metadata should make the check
+tractable, but it is real work and it must happen before publishing.
+
+⚠️ Also unverified: the PyPI client's package name, and whether 21.8M edges needs subsetting
+for a 15-question evaluation. Parquet plus Polars makes subsetting cheap either way.
+
+Source: https://github.com/mims-harvard/optimuskg
+
+### 🥈 Backup: PrimeKG — *pending licence check*
 
 Precision Medicine Knowledge Graph, Harvard MIMS.
 
@@ -136,7 +174,7 @@ Precision Medicine Knowledge Graph, Harvard MIMS.
 
 Source: https://github.com/mims-harvard/PrimeKG
 
-### 🥈 Backup: Hetionet v1.0
+### 🥉 Backup: Hetionet v1.0
 
 Integrative biomedical hetnet built for drug repurposing.
 
@@ -149,8 +187,9 @@ Integrative biomedical hetnet built for drug repurposing.
   on**
 - Weakness: published 2017. Nine years old.
 
-Choose over PrimeKG if PrimeKG's licence is awkward, or if unambiguous CC0 is worth more to
-you than graph richness. It is a defensible pick, not a bad one.
+The safety pick. Choose it if OptimusKG's 65-source licence check or PrimeKG's licence
+proves awkward, or if unambiguous CC0 is worth more to you than graph richness or recency.
+It is a defensible choice, not a bad one — just a nine-year-old one.
 
 Source: https://github.com/hetio/hetionet
 
@@ -217,11 +256,10 @@ Note inherits the third-party-LLM-API prohibition above.
 | Layer | Pick | Holds what nothing else does | Licence |
 |---|---|---|---|
 | Structured | Synthea | who has which condition, who takes which drug | Apache-2.0 ✅ |
-| Graph | PrimeKG → Hetionet fallback | how drugs, diseases and genes relate | ⚠️ → CC0 ✅ |
+| Graph | OptimusKG → PrimeKG → Hetionet | how drugs, diseases and genes relate, with 150 property keys | MIT ✅ + 65-source check ⚠️ |
 | Documents | PMC OA, commercial subset only | what the literature reports | ⚠️ filter required |
 
-Linkage vocabulary: **SNOMED and RxNorm** (from Synthea) → **PrimeKG/Hetionet concept
-nodes** → **MeSH** (in PMC). Concepts are the shared entity set. Patients are not.
+Linkage vocabulary: **SNOMED and RxNorm** (from Synthea) → **OptimusKG concept nodes** → **MeSH** (in PMC). Concepts are the shared entity set. Patients are not.
 
 Example of a question this stack makes genuinely three-source:
 
@@ -231,7 +269,7 @@ Example of a question this stack makes genuinely three-source:
 
 - patients on D with C → **Synthea**, relational query
 - contraindications in the literature → **PMC**, retrieval over text
-- alternatives for C → **PrimeKG**, graph traversal
+- alternatives for C → **OptimusKG**, graph traversal
 
 No single query language reaches the answer. That asymmetry is the experiment.
 
@@ -239,8 +277,11 @@ No single query language reaches the answer. That asymmetry is the experiment.
 
 ## Verification checklist — do these before the fixture build
 
-- [ ] **PrimeKG licence** — read the repository licence. Commercial use permitted? If not,
-      fall back to Hetionet.
+- [ ] **OptimusKG's 65 upstream source licences** — MIT covers the code only, and the project
+      explicitly does not override source terms. Largest diligence surface of any candidate,
+      and the one most likely to change the recommendation.
+- [ ] **PrimeKG licence** — read the repository licence. Commercial use permitted? Only
+      matters if OptimusKG's source check fails.
 - [ ] **PMC OA commercial subset** — confirm how to filter, and filter at download.
 - [ ] **Synthea Coherent notes** — read a sample. Do they contain facts absent from the
       structured records, or restate them? This decides whether the option exists at all.
@@ -260,7 +301,8 @@ Record every answer in this file. The next person to ask will be you, in four mo
 ## What this changes in the design doc
 
 **A fifth pre-registration field.** Which data was used is as load-bearing as which model:
-Synthea version **and generation seed**, PrimeKG or Hetionet version, PMC snapshot date.
+Synthea version **and generation seed**, OptimusKG (or PrimeKG/Hetionet) version and
+Dataverse DOI, PMC snapshot date.
 Without the seed the fixture is not reproducible even by you.
 
 **Fixture effort drops from 10–15 days to roughly 5–8.** You still load three stores, verify
