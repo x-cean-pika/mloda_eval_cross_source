@@ -7,9 +7,21 @@ Every mloda monetization path bets on that claim. This repository tests it.
 
 ## The experiment
 
-Fifteen questions, each answerable only by combining three source systems — a relational
-database, an unstructured document corpus, and a knowledge graph sharing one entity set.
-No single query language reaches the answer. Two arms, same model, same questions:
+Fifteen questions, each answerable only by combining three source systems. No single query
+language reaches the answer.
+
+| Layer | Source | Licence, verified 2026-08-17 |
+|---|---|---|
+| Relational | **Synthea**, seeded | Apache-2.0 — clean |
+| Graph | **Hetionet v1.0**, licence-filtered | CC0 + per-edge attributes |
+| Documents | **PMC Open Access**, CC0 and CC BY only | commercial-use package |
+
+Linkage is on clinical concepts — SNOMED and RxNorm from Synthea, `Disease` and `Compound`
+nodes in Hetionet, MeSH in PMC — **not on patients**, since no synthetic patient appears in
+published literature. See `DATASETS.md` for the full evaluation, the twelve-source Hetionet
+allowlist, and why OptimusKG and MIMIC-IV were rejected.
+
+Two arms, same model, same questions:
 
 | | `mloda-arm` | `baseline-arm` |
 |---|---|---|
