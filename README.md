@@ -30,18 +30,59 @@ Fill before the first run. A pre-registration with blanks is not a pre-registrat
 |---|---|
 | Frozen namespace commit SHA | |
 | mloda version (PyPI pin) | |
-| Model (`provider/id@snapshot`, cache off) | |
+| Model under test (`provider/id@snapshot`, cache off) | |
+| Question-authoring model (**different family**) | |
+| Dataset versions + Synthea seed | |
 | API budget ceiling | |
 
 **Author separation is the rule that makes the result trustworthy.** Whoever builds the
 fixture and writes the namespace, feature descriptions, and baseline data dictionary must
-never see the questions. Whoever writes the questions, answer key, and rubric works from a
-plain-English domain description, never from the namespace. One person doing both will
-write questions the namespace happens to answer well — not dishonestly, just unavoidably —
-and the result will measure nothing.
+never see the questions. Whoever produces the questions, answer key, and rubric never sees
+the namespace. One party doing both will produce questions the namespace happens to answer
+well — not dishonestly, just unavoidably — and the result will measure nothing.
 
-Known limitation: with two people this separation is partial, since both work against a
+### Question authorship protocol
+
+Questions are **agent-authored, deterministically verified, human-reviewed.**
+
+**The agent never answers a question. It writes a query that computes the answer.**
+
+| | Circular ❌ | Rigorous ✅ |
+|---|---|---|
+| Prompt | "what is the answer?" | "write SQL / a traversal / a retrieval that computes this" |
+| Truth source | model knowledge | **execution output** |
+| Verifiable | no | yes — rerun it |
+| Humans review | a medical fact | query logic |
+
+If a model produces the answer key from its own knowledge, the test is graded by the same
+class of system under test: when the author model and `mloda-arm` are wrong the same way, a
+wrong answer scores correct, and the benchmark measures agreement with a model rather than
+correctness.
+
+**Steps.**
+
+1. Agent proposes concept combinations spanning all three sources.
+2. Agent writes three deterministic queries — Synthea SQL, Hetionet traversal, PMC retrieval.
+3. **Queries are executed. The output is the answer key.** Correct by construction.
+4. Agent phrases the natural-language question whose answer is that output.
+5. **Clinical reviewer** — is this a question a real person would ask, and is it medically
+   coherent? ~1 hour for fifteen. Never sees the namespace or the queries.
+6. **Tom** — does the query compute what the question asks, and does answering genuinely
+   require all three sources? Needs data literacy, not clinical knowledge. Never sees the
+   namespace.
+7. Question set, answer key and rubric are frozen together.
+
+**Use a different model family to author than the one under test.** Same model on both sides
+yields questions phrased the way that model finds natural, which flatters it. Record both
+model pins in the pre-registration table.
+
+Known limitation: with two people the separation is partial, since both work against a
 fixture one of them designed. Recorded rather than pretended away.
+
+**When writing questions, work against the licence-filtered graph, not the full one.**
+Hetionet's drug-treats-disease edges come partly from non-commercial sources that the
+allowlist excludes. See `DATASETS.md`. Questions written against the unfiltered graph will
+produce an answer key the fixture cannot reproduce.
 
 ## Layout
 
