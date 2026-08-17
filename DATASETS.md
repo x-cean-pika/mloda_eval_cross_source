@@ -15,6 +15,81 @@ actual terms before the data enters a benchmark you intend to publish.
 
 ---
 
+## ✅ LICENCE VERIFICATION — completed 2026-08-17
+
+All three selected sources checked against primary sources. **The graph-layer pick changed
+as a result.**
+
+### Synthea — CLEAN, use it
+
+Standard Apache-2.0, verified from the LICENSE file. No non-standard clauses. Commercial use
+and redistribution both permitted. Obligations: preserve NOTICE attribution in derivative
+works; do not use Synthea/MITRE trademarks beyond describing origin. **No further diligence.**
+
+### PMC Open Access — CLEAN, filter structurally
+
+The subset is pre-split into three groupings and the FTP bulk packages follow them:
+
+| Grouping | Licences | Use? |
+|---|---|---|
+| Commercial Use Allowed | CC0, CC BY, CC BY-SA, CC BY-ND | yes, with a caveat |
+| Non-Commercial Only | CC BY-NC, CC BY-NC-SA, CC BY-NC-ND | no |
+| Other | no machine-readable CC licence, or custom | no |
+
+Download the commercial package only; filtering needs no per-article work.
+
+**Refinement: restrict further to CC0 and CC BY.** CC BY-ND forbids derivatives, and chunking
+articles for retrieval is arguably derivative. CC BY-SA's share-alike could propagate to the
+published fixture. Dropping both removes two grey areas at no meaningful cost in volume.
+
+### OptimusKG — BLOCKED for commercial publication
+
+Verbatim from the README:
+
+> "OptimusKG integrates multiple primary data resources, each of which is subject to its own
+> license and terms of use. These terms may impose restrictions on redistribution,
+> commercial use, or downstream applications."
+>
+> "Some resources provide data under academic or noncommercial licenses, while others may
+> impose attribution or usage requirements."
+>
+> "Users are responsible for reviewing and complying with the license and terms of use of
+> each primary dataset, as specified by the original data providers."
+
+**And the README supplies no per-source licence manifest.** There is no map of which of the
+65 sources carry which terms, so establishing commercial rights means identifying and
+checking all 65 — with the project stating up front that some are non-commercial.
+
+Access details, recorded for later: Harvard Dataverse DOI `10.7910/DVN/IYNGEV`, PyPI package
+`optimuskg`.
+
+**Middle path if the Polars/Parquet fit proves worth it:** use OptimusKG internally and
+publish results only, never the fixture. That sacrifices reproducibility, which was the
+reason for choosing open data in the first place.
+
+### Hetionet — PROMOTED to graph-layer pick
+
+Not on data quality. OptimusKG is larger, newer, and the better technical fit. Hetionet wins
+on the one criterion that decides publishability: **it applies a licence attribute on a
+per-node and per-edge basis** for sources with defined licences. The licence metadata ships
+*inside the graph*, so it can be filtered programmatically and what you used can be proven.
+
+An afternoon of filtering against a 65-source legal review is not a close call for a
+two-person company.
+
+### Verified stack
+
+| Layer | Use | Status |
+|---|---|---|
+| Structured | Synthea | Apache-2.0 ✅ clean |
+| Graph | Hetionet v1.0 | CC0 + per-edge licence attributes ✅ filterable |
+| Documents | PMC OA, CC0 and CC BY only | ✅ structural filter |
+
+Remaining check: Hetionet's per-source attributes for the specific node and edge types the
+questions actually touch. Bounded and programmatic, unlike the OptimusKG review.
+
+---
+
 ## The criteria
 
 Ranked in the order that decides the choice.
@@ -256,10 +331,10 @@ Note inherits the third-party-LLM-API prohibition above.
 | Layer | Pick | Holds what nothing else does | Licence |
 |---|---|---|---|
 | Structured | Synthea | who has which condition, who takes which drug | Apache-2.0 ✅ |
-| Graph | OptimusKG → PrimeKG → Hetionet | how drugs, diseases and genes relate, with 150 property keys | MIT ✅ + 65-source check ⚠️ |
-| Documents | PMC OA, commercial subset only | what the literature reports | ⚠️ filter required |
+| Graph | **Hetionet v1.0** (OptimusKG blocked on licence) | how drugs, diseases and genes relate | CC0 + per-edge attributes ✅ |
+| Documents | PMC OA, **CC0 and CC BY only** | what the literature reports | ✅ structural filter |
 
-Linkage vocabulary: **SNOMED and RxNorm** (from Synthea) → **OptimusKG concept nodes** → **MeSH** (in PMC). Concepts are the shared entity set. Patients are not.
+Linkage vocabulary: **SNOMED and RxNorm** (from Synthea) → **Hetionet concept nodes** → **MeSH** (in PMC). Concepts are the shared entity set. Patients are not.
 
 Example of a question this stack makes genuinely three-source:
 
@@ -269,7 +344,7 @@ Example of a question this stack makes genuinely three-source:
 
 - patients on D with C → **Synthea**, relational query
 - contraindications in the literature → **PMC**, retrieval over text
-- alternatives for C → **OptimusKG**, graph traversal
+- alternatives for C → **Hetionet**, graph traversal
 
 No single query language reaches the answer. That asymmetry is the experiment.
 
