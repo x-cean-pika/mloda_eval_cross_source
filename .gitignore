@@ -1,0 +1,52 @@
+# Secrets — never commit. This project holds model API keys.
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+secrets.toml
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.eggs/
+
+# Environments
+.venv/
+venv/
+env/
+
+# Tooling caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.coverage
+htmlcov/
+.ipynb_checkpoints/
+
+# Local model/embedding caches — large, reproducible, not ours
+.cache/
+*.faiss
+*.bin
+
+# Editors / OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Deliberately NOT ignored, and this matters:
+#
+#   fixture/   the three-source corpus, its entity IDs, and the generator seed
+#   namespace/ FeatureGroups and list_features descriptions
+#   questions/ question set, frozen answer key, grading rubric
+#   results/   raw run transcripts, scores, the FeatureGroup register
+#
+# This is a pre-registered experiment. Its inputs and outputs are the evidence.
+# If they live only on one laptop, nobody can verify the result — including us,
+# six months from now. Commit them. If the fixture grows past what git handles
+# comfortably, reach for git-lfs rather than .gitignore.
