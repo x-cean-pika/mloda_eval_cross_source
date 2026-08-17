@@ -77,6 +77,51 @@ per-node and per-edge basis** for sources with defined licences. The licence met
 An afternoon of filtering against a 65-source legal review is not a close call for a
 two-person company.
 
+
+#### Hetionet source-licence detail — the allowlist
+
+The README says only "all original content is CC0" and defers to a table. The table
+(`dhimmel/integrate` @ `d482033`, linked from the README) is specific, and the picture is
+mixed. CC0 covers Himmelstein's own integration work; the underlying 29 sources vary.
+
+| Category | Sources | Usable commercially? |
+|---|---|---|
+| Public domain | Entrez Gene, LabeledIn, MEDLINE, MeSH, Pathway Interaction Database | ✅ |
+| CC BY 3.0 | Disease Ontology, Uberon, WikiPathways | ✅ attribution |
+| CC BY 4.0 | DISEASES, **DrugCentral**, Gene Ontology, TISSUES | ✅ attribution |
+| CC BY-NC-SA | **MEDI**, **PREDICT**, **SIDER 4** | ❌ non-commercial |
+| Custom permissive | GWAS Catalog, Reactome, LINCS L1000, BindingDB, DisGeNET (ODbL), **DrugBank 4.2** | ⚠️ read each |
+| Restrictive | MSigDB | ❌ |
+| No licence | ADEPTUS, Bgee, DOAF, ehrlink, Evolutionary Rate Covariation, hetio-dag, Incomplete Interactome, Human Interactome Database, STARGEO | ❌ no grant to rely on |
+
+**This affects the example question.** `Compound–treats–Disease` edges derive partly from
+PREDICT and MEDI (CC BY-NC-SA), and side effects from SIDER 4 (CC BY-NC-SA). Those are among
+the most useful edges in the graph and they are not available to a commercial publication.
+
+**DrugCentral rescues it:** CC BY 4.0 and it supplies drug indications, so drug-treats-disease
+survives if you take DrugCentral-sourced edges and drop the PREDICT/MEDI ones.
+
+**DrugBank 4.2** carries a custom University of Alberta licence and has historically required
+a paid commercial licence. Treat as excluded until someone reads the actual terms.
+
+**Use an allowlist, not a blocklist.** Filter on the per-edge `license` attribute to:
+
+```
+Entrez Gene, LabeledIn, MEDLINE, MeSH, Pathway Interaction Database,
+Disease Ontology, Uberon, WikiPathways, DISEASES, DrugCentral,
+Gene Ontology, TISSUES
+```
+
+Surviving content: diseases, genes, anatomy, pathways, disease-gene associations, tissue
+expression, drug indications. Sufficient for cross-source questions. Anything outside the
+allowlist requires a specific, recorded decision.
+
+⚠️ **The licence table is a 2016-era snapshot** reflecting Hetionet v1.0's build state.
+Upstream terms change. Re-check the allowlisted sources before publishing.
+
+Table: https://github.com/dhimmel/integrate/blob/d482033bcaa913a976faf4a6ee08497281c739c3/licenses/README.md
+Discussion: https://doi.org/10.15363/thinklab.d107
+
 ### Verified stack
 
 | Layer | Use | Status |
@@ -85,8 +130,8 @@ two-person company.
 | Graph | Hetionet v1.0 | CC0 + per-edge licence attributes ✅ filterable |
 | Documents | PMC OA, CC0 and CC BY only | ✅ structural filter |
 
-Remaining check: Hetionet's per-source attributes for the specific node and edge types the
-questions actually touch. Bounded and programmatic, unlike the OptimusKG review.
+Remaining check: re-verify the allowlisted sources' current terms before publishing. The
+filter itself is mechanical — see the allowlist above.
 
 ---
 
