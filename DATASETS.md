@@ -1,0 +1,272 @@
+# Fixture candidates: healthcare / biomedical data sources
+
+Candidate datasets for the three-source fixture, ranked per layer with backups.
+
+**Read the verification legend first. Not everything here is confirmed.**
+
+| Mark | Meaning |
+|---|---|
+| ✅ | Verified against a primary source on 2026-08-17 |
+| ⚠️ | **Recalled, not verified. Check before relying on it.** |
+| ❌ | Confirmed constraint that disqualifies it for this experiment |
+
+Nothing in this file is legal advice. Every licence marked ⚠️ needs a human to read the
+actual terms before the data enters a benchmark you intend to publish.
+
+---
+
+## The criteria
+
+Ranked in the order that decides the choice.
+
+**1. Information independence — the one that matters most.** Each source must hold facts the
+others do not. If the documents merely restate the database, a "cross-source" question is
+theatre: the model answers from one source and the experiment measures nothing. This single
+criterion eliminates otherwise-attractive options.
+
+**2. Licence clarity for commercial use.** Results will be published as marketing by a
+for-profit company. "Free for research" is not the same as "free for us." Several candidates
+below are free for academics and restricted for companies.
+
+**3. Redistributability.** A pre-registered benchmark nobody can rerun is weak evidence. If
+the fixture cannot ship with the results, reproducibility depends on trusting us.
+
+**4. Entity linkability.** Sources must share resolvable identifiers. In this domain that
+means clinical concept codes — SNOMED, RxNorm, MeSH — not patient IDs, since no synthetic
+patient appears in published literature.
+
+**5. Scale and difficulty.** Enough volume that aggregate questions return meaningful
+numbers, and enough messiness that the easy case is not the only case.
+
+**6. LLM-API compatibility.** The entire experiment pipes data to a frontier model. Any
+source forbidding third-party API processing forces self-hosted inference, which changes
+what the result means.
+
+---
+
+## Layer 1 — Structured / relational
+
+### 🥇 Top pick: Synthea
+
+Synthetic patient population simulator from MITRE. Models full medical histories:
+demographics, conditions, medications, procedures, encounters, observations.
+
+- **Licence: Apache-2.0** ✅ — unambiguous commercial use, redistributable
+- Exports HL7 FHIR R4, C-CDA, and CSV ✅
+- Repository actively maintained; last updated June 2026 ✅
+- **Seeded generation, so the fixture is exactly reproducible** — record the seed as a
+  pre-registration field
+- Unlimited scale: generate 100 patients or 100,000
+- Weakness: synthetic. Coding patterns are cleaner than reality, so it likely *overstates*
+  both arms. Acceptable, since it biases neither arm preferentially.
+
+Sources: https://github.com/synthetichealth/synthea · https://synthea.mitre.org/downloads
+
+### 🥈 Backup: MIMIC-IV Clinical Database Demo
+
+100 real patients from MIMIC-IV v2.2, no registration and no credentialing required.
+
+- **Openly available, no DUA** ✅ — also mirrored on the AWS Open Data Registry
+- **Excludes free-text clinical notes** ✅ — so it cannot serve Layer 3
+- ⚠️ **Licence needs checking.** Believed ODbL-style open, and the credentialed DUA's
+  third-party-API prohibition should not attach to the open demo — but that inference has
+  not been verified, and it is exactly the kind of thing to confirm rather than assume.
+- Weakness: 100 patients caps difficulty. Aggregate questions return single digits.
+
+Choose over Synthea only if realism matters more than volume.
+
+Source: https://physionet.org/content/mimic-iv-demo/2.2/
+
+### 🥉 Backup: Synthea Coherent Data Set
+
+Pre-generated Synthea population on AWS Open Data, bundling clinical notes, DNA, and imaging
+alongside structured records for the same patients.
+
+- Entity linkage is free — same synthetic patients across all artifacts
+- ⚠️ **Fails criterion 1 if the notes are generated from the structured data**, which would
+  make them a restatement rather than an independent source. **Inspect the notes before
+  adopting.** This is the single most important check in this file.
+
+Source: https://registry.opendata.aws/synthea-coherent-data/
+
+### ❌ Disqualified: MIMIC-IV (full), MIMIC-IV-Note, eICU
+
+Real clinical data including genuine free-text notes linked by `subject_id`. The best data
+available, and wrong for this experiment.
+
+- Requires PhysioNet credentialing + CITI "Data or Specimens Only Research" + a per-dataset
+  DUA ✅ — days to weeks
+- **Each user must credential individually; team sharing is not permitted** ✅
+- **Redistribution prohibited** ✅ — the fixture could never ship with results
+- **Sending it through third-party LLM APIs such as OpenAI is explicitly prohibited** ✅ —
+  PhysioNet has a dedicated notice. Compliant routes are Azure OpenAI with human-review
+  opt-out, Amazon Bedrock, or self-hosted open-weight models.
+
+Publishing *papers* using MIMIC is permitted and extremely common — that is not the problem.
+The problem is that this experiment consists entirely of handing data to a frontier model.
+
+Worth noting the irony, and the argument on the other side: that restriction is
+*data may not leave your environment for inference* — which is Open Question 7 in the design
+doc verbatim. Building on MIMIC would force the inference-residency question in week one
+rather than at a sales meeting. A defensible reason to choose it despite the cost.
+
+Sources: https://physionet.org/news/post/llm-responsible-use/ ·
+https://physionet.org/about/citi-course/
+
+### ⚠️ Unevaluated: CMS Synthetic Public Use Files (SynPUF)
+
+Synthesized Medicare claims, public. Claims rather than clinical data — different shape,
+probably a worse fit for knowledge-base questions. Not investigated.
+
+---
+
+## Layer 2 — Knowledge graph
+
+### 🥇 Top pick: PrimeKG — *pending licence check*
+
+Precision Medicine Knowledge Graph, Harvard MIMS.
+
+- 100,000+ nodes, 4,000,000+ relationships, 29 edge types ✅
+- Integrates 20 public resources, covering 17,000+ diseases ✅
+- **Carries clinical guideline text descriptions** ✅ — meaning the graph layer holds prose
+  the database does not, which strengthens information independence
+- Published 2023 — materially newer than Hetionet
+- ⚠️ **Licence not verified.** Could not confirm from search. **Check the repository before
+  committing.** If the licence is restrictive for commercial use, fall back to Hetionet.
+
+Source: https://github.com/mims-harvard/PrimeKG
+
+### 🥈 Backup: Hetionet v1.0
+
+Integrative biomedical hetnet built for drug repurposing.
+
+- **Licence: CC0** ✅ — the strongest licence position of any candidate here
+- 47,031 nodes across 11 types; 2,250,197 edges across 24 types ✅
+- Ships in JSON and **Neo4j** formats, both carrying node and edge properties ✅ (TSV and
+  matrix formats drop those properties — use JSON or Neo4j)
+- Per-node and per-edge licence attributes, since it integrates 29 upstream sources ✅ —
+  meaning even under CC0 for original content, **check the attributes for sources you rely
+  on**
+- Weakness: published 2017. Nine years old.
+
+Choose over PrimeKG if PrimeKG's licence is awkward, or if unambiguous CC0 is worth more to
+you than graph richness. It is a defensible pick, not a bad one.
+
+Source: https://github.com/hetio/hetionet
+
+### ⚠️ Unverified alternatives
+
+- **Open Targets** — drug-target-disease associations, open, actively maintained. Not
+  verified this session. Worth a look if PrimeKG's licence fails.
+- **SPOKE** — large biomedical KG; access terms unknown.
+- **UMLS** — authoritative medical terminology. Free but requires licence registration, and
+  it is a terminology rather than a rich graph.
+- **SNOMED CT** — licensing varies by country; free in member countries. ⚠️ Germany's
+  membership status should be confirmed if you want to rely on it, and you are Berlin-based
+  so this may be free for you.
+- **RxNorm, MeSH, ICD-10** — free, and useful as the *linkage vocabulary* rather than as the
+  graph layer itself. RxNorm and MeSH are how Layers 1 and 3 connect to Layer 2.
+
+---
+
+## Layer 3 — Unstructured documents
+
+This layer is the hardest to source well, and the one where my first recommendation was
+weakest.
+
+### 🥇 Top pick: PubMed Central Open Access Subset
+
+Full-text biomedical literature, bulk downloadable.
+
+- **Passes criterion 1 decisively** — it is the only candidate holding knowledge that is
+  genuinely absent from both the patient record and the graph: what studies actually report.
+  That independence is what makes a three-source question real rather than decorative.
+- Links to the other layers through MeSH terms
+- ⚠️ **Licence needs care, and this is the trap.** The PMC OA Subset is split into
+  commercial-use and non-commercial-only portions. A for-profit company publishing a
+  benchmark must restrict itself to the commercial-use subset. **Filter on licence at
+  download time, not afterwards.**
+- Weakness: genre mismatch. It is published literature, not the internal documents a
+  knowledge-base product would actually index. Accept knowingly — the independence is worth
+  more than the genre fidelity for a first experiment.
+
+### 🥈 Backup: MTSamples
+
+Several thousand transcribed medical reports, freely available. Closer in genre to real
+clinical prose than literature is.
+
+- ⚠️ **Licence genuinely unclear.** Widely used, rarely with an explicit grant. Verify before
+  publishing anything built on it.
+- Weakness: no entity link to your patients or your graph. Would need concept extraction to
+  connect, which is real work.
+
+### 🥉 Conditional: Synthea Coherent clinical notes
+
+See Layer 1. Free entity linkage, but **only usable if the notes contain information not
+already in the structured records.** Inspect first.
+
+### ❌ Disqualified: MIMIC-IV-Note, n2c2 / i2b2
+
+Real clinical notes, and the best fit on genre by a wide margin. Both require DUAs; MIMIC-IV-
+Note inherits the third-party-LLM-API prohibition above.
+
+---
+
+## Recommended stack
+
+| Layer | Pick | Holds what nothing else does | Licence |
+|---|---|---|---|
+| Structured | Synthea | who has which condition, who takes which drug | Apache-2.0 ✅ |
+| Graph | PrimeKG → Hetionet fallback | how drugs, diseases and genes relate | ⚠️ → CC0 ✅ |
+| Documents | PMC OA, commercial subset only | what the literature reports | ⚠️ filter required |
+
+Linkage vocabulary: **SNOMED and RxNorm** (from Synthea) → **PrimeKG/Hetionet concept
+nodes** → **MeSH** (in PMC). Concepts are the shared entity set. Patients are not.
+
+Example of a question this stack makes genuinely three-source:
+
+> Among patients prescribed drug D who also have condition C, what do published studies
+> report about contraindications, and which alternative compounds does the graph associate
+> with C?
+
+- patients on D with C → **Synthea**, relational query
+- contraindications in the literature → **PMC**, retrieval over text
+- alternatives for C → **PrimeKG**, graph traversal
+
+No single query language reaches the answer. That asymmetry is the experiment.
+
+---
+
+## Verification checklist — do these before the fixture build
+
+- [ ] **PrimeKG licence** — read the repository licence. Commercial use permitted? If not,
+      fall back to Hetionet.
+- [ ] **PMC OA commercial subset** — confirm how to filter, and filter at download.
+- [ ] **Synthea Coherent notes** — read a sample. Do they contain facts absent from the
+      structured records, or restate them? This decides whether the option exists at all.
+- [ ] **MIMIC-IV Demo licence** — confirm the open demo does not inherit the credentialed
+      DUA's third-party-API prohibition. Only matters if you use it.
+- [ ] **Hetionet per-source licence attributes** — CC0 covers original content; upstream
+      sources carry their own terms on node and edge attributes.
+- [ ] **MTSamples licence** — only if you adopt it.
+- [ ] **SNOMED CT** — confirm Germany's member-country status if you rely on SNOMED beyond
+      what Synthea already emits.
+
+Record every answer in this file. The next person to ask will be you, in four months, and
+"I think it was fine" will not be a good enough answer to publish on.
+
+---
+
+## What this changes in the design doc
+
+**A fifth pre-registration field.** Which data was used is as load-bearing as which model:
+Synthea version **and generation seed**, PrimeKG or Hetionet version, PMC snapshot date.
+Without the seed the fixture is not reproducible even by you.
+
+**Fixture effort drops from 10–15 days to roughly 5–8.** You still load three stores, verify
+concept linkage, and define a noise model — but you are no longer inventing a corpus, which
+was the genuinely hard part.
+
+**Reviewer Concern 1 improves.** The limitation was that both authors work against a fixture
+one of them designed. With third-party data, neither built it. Not fully closed — you still
+choose which slice — but a real gain at zero cost.
