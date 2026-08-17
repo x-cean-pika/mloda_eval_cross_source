@@ -242,7 +242,12 @@ probably a worse fit for knowledge-base questions. Not investigated.
 
 ## Layer 2 — Knowledge graph
 
-### 🥇 Top pick: OptimusKG
+### ❌ BLOCKED on licence: OptimusKG
+
+**Ranked first on the data, blocked on the licence.** Kept here in full because the technical
+case is genuinely strong and the internal-use-only path remains open — see the verification
+section above. Do not select it for a published benchmark without auditing 65 sources.
+
 
 Zitnik Lab, Harvard Medical School — the same group behind PrimeKG, and its successor in
 lineage if not in name. "A modern multimodal knowledge graph with type-specific metadata
@@ -269,18 +274,18 @@ across biomedical domains."
 3. **Ontology grounding makes concept linkage to SNOMED, RxNorm and MeSH cleaner** than
    hand-mapping against an ungrounded graph.
 
-⚠️ **Licence diligence is larger here, not smaller.** MIT covers the codebase. The graph
-integrates **65 upstream sources with varying licences**, and the project states explicitly
-that it "does not alter or override these source-specific licensing conditions." That is a
-bigger surface than Hetionet's 29 sources. The per-source metadata should make the check
-tractable, but it is real work and it must happen before publishing.
+❌ **Why it is blocked.** MIT covers the codebase only. The README states its sources "may
+impose restrictions on redistribution, commercial use, or downstream applications" and that
+"some resources provide data under academic or noncommercial licenses" — **and it supplies no
+per-source licence manifest.** Unlike Hetionet, there is nothing to filter on, so establishing
+commercial rights means auditing all 65 sources yourself.
 
-⚠️ Also unverified: the PyPI client's package name, and whether 21.8M edges needs subsetting
-for a 15-question evaluation. Parquet plus Polars makes subsetting cheap either way.
+Access details if the internal-use-only path is taken: Harvard Dataverse DOI
+`10.7910/DVN/IYNGEV`, PyPI package `optimuskg`.
 
 Source: https://github.com/mims-harvard/optimuskg
 
-### 🥈 Backup: PrimeKG — *pending licence check*
+### 🥈 Backup: PrimeKG — *licence unverified*
 
 Precision Medicine Knowledge Graph, Harvard MIMS.
 
@@ -294,9 +299,11 @@ Precision Medicine Knowledge Graph, Harvard MIMS.
 
 Source: https://github.com/mims-harvard/PrimeKG
 
-### 🥉 Backup: Hetionet v1.0
+### 🥇 TOP PICK: Hetionet v1.0
 
-Integrative biomedical hetnet built for drug repurposing.
+Integrative biomedical hetnet built for drug repurposing. **Selected on licence
+filterability, not on data quality** — OptimusKG is larger, newer and a better technical fit,
+and lost because you cannot prove your right to publish it.
 
 - **Licence: CC0** ✅ — the strongest licence position of any candidate here
 - 47,031 nodes across 11 types; 2,250,197 edges across 24 types ✅
@@ -307,9 +314,40 @@ Integrative biomedical hetnet built for drug repurposing.
   on**
 - Weakness: published 2017. Nine years old.
 
-The safety pick. Choose it if OptimusKG's 65-source licence check or PrimeKG's licence
-proves awkward, or if unambiguous CC0 is worth more to you than graph richness or recency.
-It is a defensible choice, not a bad one — just a nine-year-old one.
+#### ⚠️ CC0 is not the whole story — filter before you use it
+
+"All original content is CC0" covers Himmelstein's integration work. The 29 underlying
+sources vary, and three are explicitly non-commercial. **Filter on the per-edge `license`
+attribute to this allowlist:**
+
+```
+Entrez Gene, LabeledIn, MEDLINE, MeSH, Pathway Interaction Database,
+Disease Ontology, Uberon, WikiPathways, DISEASES, DrugCentral,
+Gene Ontology, TISSUES
+```
+
+Excluded and why: **MEDI, PREDICT, SIDER 4** are CC BY-NC-SA (non-commercial); **MSigDB** is
+restrictive; **nine sources carry no licence at all** (ADEPTUS, Bgee, DOAF, ehrlink,
+Evolutionary Rate Covariation, hetio-dag, Incomplete Interactome, Human Interactome Database,
+STARGEO) so there is no grant to rely on; **DrugBank 4.2** carries a custom University of
+Alberta licence and has historically required a paid commercial licence. Six sources
+(GWAS Catalog, Reactome, LINCS L1000, BindingDB, DisGeNET) carry custom permissive terms
+needing individual reads.
+
+**This changes what questions can be asked.** `Compound–treats–Disease` edges derive partly
+from PREDICT and MEDI, and side effects from SIDER 4 — all excluded. **DrugCentral (CC BY 4.0)
+supplies drug indications**, so drug-treats-disease survives via DrugCentral-sourced edges.
+Whoever authors questions must work against the **filtered** graph, or the answer key will
+reference edges the fixture does not contain.
+
+Surviving content: diseases, genes, anatomy, pathways, disease-gene associations, tissue
+expression, drug indications. Sufficient for cross-source questions.
+
+⚠️ The licence table is a 2016-era snapshot of v1.0's build state. Re-check the allowlisted
+sources before publishing.
+
+Full breakdown: see the verification section at the top of this file.
+Table: https://github.com/dhimmel/integrate/blob/d482033bcaa913a976faf4a6ee08497281c739c3/licenses/README.md
 
 Source: https://github.com/hetio/hetionet
 
