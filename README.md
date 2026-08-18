@@ -59,6 +59,92 @@ never see the questions. Whoever produces the questions, answer key, and rubric 
 the namespace. One party doing both will produce questions the namespace happens to answer
 well — not dishonestly, just unavoidably — and the result will measure nothing.
 
+### The freeze
+
+The frozen namespace SHA is the only part of author separation that can be made into hard
+evidence rather than an assurance. Everything below exists to make it worth something.
+
+**What it pins.** Three artifacts, one commit: the FeatureGroups and `list_features`
+descriptions in `namespace/`, and `baseline-arm`'s data dictionary in `arms/`. It does not
+pin mloda — that is the separate PyPI field above.
+
+**A local SHA proves nothing.** Both git dates are environment variables
+(`GIT_AUTHOR_DATE`, `GIT_COMMITTER_DATE`), `--amend --date` rewrites them, and a rebase
+rewrites SHAs wholesale. A commit reading "frozen 1 September" could have been made on the
+20th, after the questions existed, and the repository would not show it. The hash proves
+*this content goes with this hash*; it does not prove *this hash existed by this date*.
+Recording it in a design doc you also control is circular — evidence and claim sit in the
+same custody.
+
+**So put the hash in someone else's hands before the questions exist.** Cheapest first:
+
+```bash
+git tag -a freeze/namespace-v1 -m "namespace + descriptions + data dictionary frozen before question authoring"
+git push origin main
+git push origin freeze/namespace-v1
+```
+
+Then enable **tag protection** in the repo settings so the tag cannot be quietly moved.
+
+Two cheap reinforcements, both worth doing:
+
+- **Let CI stamp it.** A workflow triggered on tag push that does nothing but echo the SHA.
+  The Actions run record carries a GitHub-side timestamp bound to the commit and persists,
+  where the public events API retains push records only ~90 days.
+- **Email the SHA to the external clinical reviewer.** They are already contracted and
+  already required never to see the namespace, so a 40-character hash reveals nothing to
+  them. It puts a dated copy on infrastructure neither party controls, and it is the most
+  legible form to a reader: an outside party held this hash on this date.
+
+**The ordering is the substance.** The push must precede the existence of any question, and
+the record must show that. Have the question author's first commit reference the freeze SHA,
+so their work visibly starts from a known frozen point rather than both timelines being
+asserted afterwards.
+
+### Freeze scope, and what happens when the harness breaks
+
+`arms/` holds two categorically different things, and one commit SHA pins both:
+
+| | What it is | If it changes |
+|---|---|---|
+| Baseline data dictionary | **Treatment variable**, matched against `list_features` descriptions | The comparison measures something else |
+| MCP server, baseline tools, runner, grader | **Plumbing** | The measurement runs, or it does not |
+
+Partway through the runs a harness bug will surface. A `get_features` timeout that reaches
+the agent as a tool error rather than rows. `query_graph` returning nondeterministic row
+order that the grader mis-scores. Token accounting double-counting tool results on one arm.
+Missing rate-limit backoff producing failures that are not evenly distributed across arms.
+Each corrupts data while saying nothing about the hypothesis.
+
+**Decide the policy now, because you will be deciding it while looking at partial results.**
+By then you will know which arm the bug is hurting, and the fix that helps your arm will
+genuinely look more necessary than the one that does not. That is how motivated reasoning
+works on everyone. Do not plan to rely on judgment at that moment.
+
+**Frozen hard — any change voids the primary result.** All of `namespace/`, and the
+`baseline-arm` data dictionary. These are the treatment variable on their respective arms.
+
+**Fixable, under a deviation log.** MCP server, baseline tool implementations, runner,
+grading scripts. Every fix is recorded in `DEVIATIONS.md` with: timestamp, before SHA, after
+SHA, what broke with the failing output, **why the fix cannot change relative arm
+performance**, and which completed runs are discarded. The fourth field is the one doing the
+work — an argument you cannot write down is a fix you should not make.
+
+**Any harness fix discards all completed runs. Both arms restart from zero.** Deliberately
+rigid: it removes judgment at the exact moment judgment is least trustworthy. Check the cost
+before flinching — 15 questions × 2 arms × 3 runs × ≤15 turns is an API bill and a few hours,
+not a month. This is why the sixth pre-registration field is a currency ceiling rather than a
+turn count: the budget is sized so a discarded run is affordable. A rigid protocol you can
+afford to obey beats a flexible one you will rationalise around.
+
+**Smoke-test before freezing, so you rarely need any of the above.** Before the freeze, the
+*fixture author* writes two or three throwaway questions and runs the complete pipeline on
+them: both arms, every tool, grading, token accounting. Those questions are contaminated by
+construction — the same person wrote the namespace — which is exactly what makes them safe
+here. They exist to shake out timeouts, ordering bugs, accounting errors and rate limits
+while fixing them is still free. Then delete them, freeze, and hand off. Half a day, and it
+catches most of what would otherwise become a deviation.
+
 ### Question authorship protocol
 
 Questions are **agent-authored, deterministically verified, human-reviewed.**
@@ -105,14 +191,16 @@ produce an answer key the fixture cannot reproduce.
 ## Layout
 
 ```
-fixture/     three-source corpus, entity IDs, generator seed
-namespace/   FeatureGroups and list_features descriptions
-questions/   question set, frozen answer key, grading rubric
-arms/        MCP server (mloda-arm), tool surface (baseline-arm)
-results/     run transcripts, scores, FeatureGroup register
+fixture/         three-source corpus, entity IDs, generator seed
+namespace/       FeatureGroups and list_features descriptions   [frozen hard]
+questions/       question set, frozen answer key, grading rubric
+arms/            MCP server (mloda-arm), tool surface (baseline-arm)
+                 data dictionary is [frozen hard]; harness code is fixable under DEVIATIONS.md
+results/         run transcripts, scores, FeatureGroup register
+DEVIATIONS.md    every post-freeze harness change, or a statement that there were none
 ```
 
-All five are committed. They are the evidence.
+All of it is committed. It is the evidence.
 
 ## Status
 
