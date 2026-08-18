@@ -30,13 +30,41 @@ Two arms, same model, same questions:
 | Sees schema | No | Yes |
 | Writes queries | No | Yes |
 
-**Win condition:** gap ≥ 6/15 with two-sided Fisher exact p < 0.05. n=15 is a screen, not a
-proof — a positive result that misses significance triggers a 30-question re-run before any
-strategic commitment.
+**Win condition: two-sided McNemar exact p < 0.05** on discordant pairs. Both arms answer the
+same questions, so the data are paired and Fisher exact — which assumes independent samples —
+is the wrong test. Let `b` = questions `mloda-arm` got right and `baseline-arm` did not, and
+`c` = the reverse. At n=15 the criterion reduces exactly to **b ≥ 6 + 2c**:
+
+| Losses `c` | Wins `b` needed | Gap | p |
+|---|---|---|---|
+| 0 | 6 | 6 | 0.031 |
+| 1 | 8 | 7 | 0.039 |
+| 2 | 10 | 8 | 0.039 |
+| 3 | 12 | 9 | 0.035 |
+| 4 | — | — | impossible within 15 questions |
+
+**`mloda-arm` can afford at most three losses, and each one costs two additional wins.** A raw
+gap threshold is not used because this test implies it (`gap = b − c ≥ 6 + c`). A gap of 6 is
+significant at 6 wins / 0 losses and *not* significant at 7/1 or 8/2, which is why the marginal
+totals are not sufficient: **`results/` must record each arm's per-question outcome**, or the
+primary analysis cannot be computed at all.
+
+n=15 is a screen, not a proof — a positive result that misses significance triggers a
+30-question re-run before any strategic commitment.
 
 ## Pre-registration
 
 Fill before the first run. A pre-registration with blanks is not a pre-registration.
+
+**And a pre-registration nobody outside can read is not a registration.** Every rule below is
+enforced by two people who both want the answer to be yes. Pre-registration binds because it is
+filed publicly *before* results exist, so that abandoning it is visible. This repository is
+therefore made public before the first run — protocol, thresholds and decision rules first,
+results later. Publishing it after the fact would prove nothing.
+
+Publishing now is also the cheapest it will ever be: `namespace/`, `questions/` and `results/`
+are still empty, so nothing anyone is undecided about is being disclosed, and the question of
+whether to publish the namespace stays open until it is actually due.
 
 | Field | Value |
 |---|---|
@@ -86,15 +114,21 @@ git push origin freeze/namespace-v1
 
 Then enable **tag protection** in the repo settings so the tag cannot be quietly moved.
 
-Two cheap reinforcements, both worth doing:
+**Know what each anchor actually buys.** Tag protection defends against accident and sloppiness
+— a tag moved without thinking, a rebase that rewrites history. It does **not** resist the
+repository owner, who can disable protection, move the tag, re-enable it, and delete Actions
+logs. Only a copy held outside your custody answers a determined skeptic.
+
+Two reinforcements, the second of which is the one that counts:
 
 - **Let CI stamp it.** A workflow triggered on tag push that does nothing but echo the SHA.
   The Actions run record carries a GitHub-side timestamp bound to the commit and persists,
   where the public events API retains push records only ~90 days.
-- **Email the SHA to the external clinical reviewer.** They are already contracted and
-  already required never to see the namespace, so a 40-character hash reveals nothing to
-  them. It puts a dated copy on infrastructure neither party controls, and it is the most
-  legible form to a reader: an outside party held this hash on this date.
+- **Email the SHA to the external clinical reviewer. This is the one that resists the owner.**
+  They are already contracted and already required never to see the namespace, so a
+  40-character hash reveals nothing to them. It puts a dated copy on infrastructure neither
+  party controls, and it is the most legible form to a reader: an outside party held this hash
+  on this date. Do all three; rely on this one.
 
 **The ordering is the substance.** The push must precede the existence of any question, and
 the record must show that. Have the question author's first commit reference the freeze SHA,
@@ -130,20 +164,39 @@ SHA, what broke with the failing output, **why the fix cannot change relative ar
 performance**, and which completed runs are discarded. The fourth field is the one doing the
 work — an argument you cannot write down is a fix you should not make.
 
-**Any harness fix discards all completed runs. Both arms restart from zero.** Deliberately
-rigid: it removes judgment at the exact moment judgment is least trustworthy. Check the cost
-before flinching — 15 questions × 2 arms × 3 runs × ≤15 turns is an API bill and a few hours,
-not a month. This is why the sixth pre-registration field is a currency ceiling rather than a
-turn count: the budget is sized so a discarded run is affordable. A rigid protocol you can
-afford to obey beats a flexible one you will rationalise around.
+**A harness fix that could move the primary result discards all completed runs. Both arms
+restart from zero.** Deliberately rigid: it removes judgment at the exact moment judgment is
+least trustworthy. Check the cost before flinching — 15 questions × 2 arms × 3 runs × ≤15 turns
+is an API bill and a few hours, not a month. This is why the sixth pre-registration field is a
+currency ceiling rather than a turn count: the budget is sized so a discarded run is affordable.
+A rigid protocol you can afford to obey beats a flexible one you will rationalise around.
 
-**Smoke-test before freezing, so you rarely need any of the above.** Before the freeze, the
-*fixture author* writes two or three throwaway questions and runs the complete pipeline on
-them: both arms, every tool, grading, token accounting. Those questions are contaminated by
-construction — the same person wrote the namespace — which is exactly what makes them safe
-here. They exist to shake out timeouts, ordering bugs, accounting errors and rate limits
-while fixing them is still free. Then delete them, freeze, and hand off. Half a day, and it
+**Scoped, because an unscoped version punishes the honest act.** If *every* fix voids all runs,
+then noticing a bug at run 28 becomes expensive for the person who would eat the restart, and a
+borderline anomaly acquires a pull toward "that is just behaviour." So: faults touching **tool
+behaviour, retries, or turn caps** trigger the restart. Pure **instrumentation** that feeds only
+reported-never-headline metrics — token accounting is the live example, since token cost is
+explicitly excluded from the win definition — may be fixed and recomputed under a logged
+deviation with no restart. The test is whether the defect could move the primary result, and it
+is drawn here in advance rather than at the moment it pays to draw it differently.
+
+**Smoke-test immediately after freezing, so you rarely need any of the above.** The *fixture
+author* writes two or three throwaway questions and runs the pipeline on them: both arms, every
+tool, token accounting. **Plumbing only. The pass criterion is "no tool faults, no timeouts,
+accounting reconciles" — never "did the agent answer correctly."** They exist to shake out
+timeouts, ordering bugs, accounting errors and rate limits while fixing them is still free
+(nothing has run, so a fix discards nothing). Then delete them and hand off. Half a day, and it
 catches most of what would otherwise become a deviation.
+
+**This runs after the freeze, not before, and the ordering is not incidental.** Placed before,
+it is a loophole: the namespace is still editable, and the author has just watched their own
+arm succeed or fail on question-shaped inputs. That is a compliant channel for tuning the
+namespace against questions, which is the one thing author separation exists to prevent.
+
+**No grading until every run completes.** During the run, transcripts are inspected for
+tool-level faults only — never for answer correctness. This is what makes the restart rule
+survivable: you cannot be swayed by which arm a bug is hurting if you do not yet know which arm
+is ahead.
 
 ### Question authorship protocol
 
@@ -206,6 +259,10 @@ All of it is committed. It is the evidence.
 
 **Not yet started.** Nothing in `fixture/`, `namespace/`, `questions/`, `arms/` or `results/`.
 The blocking item is the pre-registration table above: six fields, all blank.
+
+Five of the six can be filled today. The sixth — the frozen namespace SHA — is an output, not a
+choice: it exists only once D1 and the namespace are done, and filling it is the signal that
+they are.
 
 Design doc: `mloda_business_plans/2026-08-17-prove-the-runtime-hypothesis.md` (private),
 **Revision 9** (2026-08-18). Revision 9 changed nothing in this experiment — no deliverable,

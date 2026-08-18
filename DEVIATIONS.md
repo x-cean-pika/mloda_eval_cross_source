@@ -15,11 +15,23 @@ partial results. Full reasoning in `README.md` → *Freeze scope*.
 | Category | Contents | Policy |
 |---|---|---|
 | **Frozen hard** | all of `namespace/`; `baseline-arm`'s data dictionary | Any change **voids the primary result**. Re-run from scratch, or log the work as post-freeze and exclude it. |
-| **Fixable** | MCP server, baseline tool implementations, runner, grading scripts | Permitted, logged below, **and all completed runs are discarded — both arms restart from zero.** |
+| **Fixable — behaviour** | MCP server, baseline tools, runner: anything touching tool behaviour, retries, or turn caps | Permitted, logged below, **and all completed runs are discarded — both arms restart from zero.** |
+| **Fixable — instrumentation** | Pure measurement that cannot move the primary result: token accounting, timing, transcript formatting | Permitted, logged below, recomputed. **No restart.** |
 
 The restart rule is deliberately rigid. It removes judgment at the moment judgment is least
 trustworthy. The budget ceiling in the pre-registration is sized so a discarded run is
 affordable.
+
+**It is scoped rather than absolute, because an absolute version punishes the honest act.** If
+every fix voids all runs, noticing a bug at run 28 is expensive for whoever would eat the
+restart, and a borderline anomaly starts to look like "just behaviour." The dividing line is
+whether the defect **could move the primary result** — token cost is reported and explicitly
+excluded from the win definition, so an accounting bug is recomputable; a retry-budget bug is
+not. Draw the line here, in advance, not at the moment it pays to draw it differently.
+
+**Grading does not begin until every run completes**, and during the run transcripts are
+inspected for tool-level faults only. That is what makes this survivable: you cannot be swayed
+by which arm a fault favours if you do not yet know which arm is ahead.
 
 **Anything not in either category is frozen hard by default.** If you find yourself arguing
 about which column something belongs to, it belongs in the left one.
