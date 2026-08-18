@@ -3,7 +3,13 @@
 Does an AI agent retrieve data more accurately by **declaring what it needs** through mloda
 than by **generating its own queries** against the same sources?
 
-Every mloda monetization path bets on that claim. This repository tests it.
+That claim is load-bearing and untested. This repository tests it.
+
+**Disclosure: this benchmark is built and run by mloda's own maintainers.** An interested party
+evaluating its own project is a conflict, not a footnote. It is why the protocol below is
+registered before the run rather than published with the results, why both arms are specified
+before any question exists, and why the answer key is produced by executing queries rather than
+by anyone's judgement. Read the method as something designed to constrain its authors.
 
 ## The experiment
 
@@ -50,15 +56,16 @@ totals are not sufficient: **`results/` must record each arm's per-question outc
 primary analysis cannot be computed at all.
 
 n=15 is a screen, not a proof — a positive result that misses significance triggers a
-30-question re-run before any strategic commitment.
+30-question re-run before any conclusion is drawn from it.
 
 ## Pre-registration
 
 Fill before the first run. A pre-registration with blanks is not a pre-registration.
 
 **And a pre-registration nobody outside can read is not a registration.** Every rule below is
-enforced by two people who both want the answer to be yes. Pre-registration binds because it is
-filed publicly *before* results exist, so that abandoning it is visible.
+otherwise enforced by the same people who build the thing being measured, and who would prefer
+a particular answer. Pre-registration binds because it is filed publicly *before* results
+exist, so that abandoning it is visible.
 
 > **Registered 2026-08-18.** This repository was made public at commit `087787c`, before the
 > fixture was built, before the namespace existed, and before a single question was written.
@@ -232,20 +239,19 @@ correctness.
 4. Agent phrases the natural-language question whose answer is that output.
 5. **Clinical reviewer** — is this a question a real person would ask, and is it medically
    coherent? ~1 hour for fifteen. Never sees the namespace or the queries.
-6. **Tom Kaltofen, mloda's maintainer** — does the query compute what the question asks, and
-   does answering genuinely require all three sources? Needs data literacy, not clinical
-   knowledge. Never sees the namespace. **Disclosed plainly: this reviewer is an interested
-   party.** He is checking query logic, not correctness of the answer key, which is produced by
-   execution rather than judgement — but a reader should know the relationship rather than
-   infer it.
+6. **An mloda maintainer** — does the query compute what the question asks, and does answering
+   genuinely require all three sources? Needs data literacy, not clinical knowledge. Never sees
+   the namespace. **This reviewer is an interested party**, checking query logic rather than the
+   answer key, which is produced by execution rather than judgement. The relationship is stated
+   so a reader does not have to infer it.
 7. Question set, answer key and rubric are frozen together.
 
 **Use a different model family to author than the one under test.** Same model on both sides
 yields questions phrased the way that model finds natural, which flatters it. Record both
 model pins in the pre-registration table.
 
-Known limitation: with two people the separation is partial, since both work against a
-fixture one of them designed. Recorded rather than pretended away.
+Known limitation: on a team this small the separation is partial, since both sides work
+against a fixture one of them designed. Recorded rather than pretended away.
 
 **When writing questions, work against the licence-filtered graph, not the full one.**
 Hetionet's drug-treats-disease edges come partly from non-commercial sources that the
@@ -275,7 +281,8 @@ Five of the six can be filled today. The sixth — the frozen namespace SHA — 
 choice: it exists only once D1 and the namespace are done, and filling it is the signal that
 they are.
 
-Design doc: `mloda_business_plans/2026-08-17-prove-the-runtime-hypothesis.md` (private),
-**Revision 9** (2026-08-18). Revision 9 changed nothing in this experiment — no deliverable,
-estimate, success criterion, or decision-table row moved. It corrected the lineage/audit
-findings in the design doc after an upstream sync, and sharpened the mloda pin warning above.
+This protocol is derived from a private design document. **Everything that governs the
+experiment is reproduced here** — the fixture, both arms, the win condition, the pre-registration
+fields, the freeze rules and the deviation policy. What the private document adds is commercial
+context, which is deliberately not part of the registration and cannot change any rule above
+without that change appearing in this repository's history first.
