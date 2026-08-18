@@ -16,11 +16,18 @@ by anyone's judgement. Read the method as something designed to constrain its au
 Fifteen questions, each answerable only by combining three source systems. No single query
 language reaches the answer.
 
-| Layer | Source | Licence, verified 2026-08-17 |
-|---|---|---|
-| Relational | **Synthea**, seeded | Apache-2.0 — clean |
-| Graph | **Hetionet v1.0**, licence-filtered | CC0 + per-edge attributes |
-| Documents | **PMC Open Access**, CC0 and CC BY only | commercial-use package |
+| Layer | Source | Licence | Access, verified 2026-08-18 |
+|---|---|---|---|
+| Relational | **Synthea v4.0.0**, seeded | Apache-2.0 — clean | tag + commit SHA; output archived, not regenerated |
+| Graph | **Hetionet v1.0**, licence-filtered | CC0 + per-source attributes | Zenodo `10.5281/zenodo.268568`, **JSON** distribution |
+| Documents | **PMC Open Access**, CC0 and CC BY only | per-article filter | `s3://pmc-oa-opendata` + dated inventory manifest |
+
+**Access paths were re-verified on 2026-08-18 and two of the three had changed.** PMC's legacy
+bulk packages are withdrawn on 2026-08-24 and its licence groupings no longer exist as
+downloads, so filtering is per-article. Hetionet's licence attribute is absent from the TSV
+distribution, so the filter requires the JSON. Synthea needs three seed-bearing flags rather
+than one and is not byte-for-byte reproducible, so the generated fixture is archived rather
+than regenerated. Full detail and the remaining open checks are in `DATASETS.md`.
 
 Linkage is on clinical concepts — SNOMED and RxNorm from Synthea, `Disease` and `Compound`
 nodes in Hetionet, MeSH in PMC — **not on patients**, since no synthetic patient appears in

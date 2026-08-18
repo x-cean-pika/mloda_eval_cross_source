@@ -26,17 +26,47 @@ Standard Apache-2.0, verified from the LICENSE file. No non-standard clauses. Co
 and redistribution both permitted. Obligations: preserve NOTICE attribution in derivative
 works; do not use Synthea/MITRE trademarks beyond describing origin. **No further diligence.**
 
-### PMC Open Access — CLEAN, filter structurally
+### PMC Open Access — CLEAN, but the access path changed under us
 
-The subset is pre-split into three groupings and the FTP bulk packages follow them:
+**⚠️ Corrected 2026-08-18. The previous version of this section described an access path NCBI
+is switching off on 2026-08-24.** It is left visible rather than deleted, because anyone who
+read this file before that date acted on it.
 
-| Grouping | Licences | Use? |
-|---|---|---|
-| Commercial Use Allowed | CC0, CC BY, CC BY-SA, CC BY-ND | yes, with a caveat |
-| Non-Commercial Only | CC BY-NC, CC BY-NC-SA, CC BY-NC-ND | no |
-| Other | no machine-readable CC licence, or custom | no |
+**What was written here, and was true until April 2026:** the subset is pre-split into
+Commercial Use Allowed (CC0, CC BY, CC BY-SA, CC BY-ND), Non-Commercial Only, and Other; the
+FTP bulk packages follow that split; download the commercial package and filtering needs no
+per-article work.
 
-Download the commercial package only; filtering needs no per-article work.
+**What is true now.** NCBI's FTP page, verbatim: *"On or after August 24 the legacy PMC Article
+Datasets files — including the FTP Service files, the PMC OA Web Service API, and the legacy
+Cloud Service files on AWS — will no longer be available."* Legacy files moved to `deprecated/`
+prefixes on 13 April 2026.
+
+**The licence groupings no longer exist as bulk packages.** NCBI, verbatim: *"There will no
+longer be baseline bulk file packages… as there are no baseline files, there are also no
+incremental files."* Articles are not pre-partitioned by licence any more, so
+**licence filtering is now per-article work, not a choice of download.**
+
+| | Current form |
+|---|---|
+| Source | `s3://pmc-oa-opendata`, region `us-east-1`, AWS Open Data, **not** requester-pays |
+| Layout | one prefix per article *version*: `PMC<accession>.<version>/` |
+| Snapshot identity | daily S3 Inventory manifest — `inventory-reports/pmc-oa-opendata/metadata/<YYYY-MM-DDTHH-00Z>/manifest.json` |
+| Commercial filter | per-article JSON metadata, field **`license_code`** ∈ {CC0, CC BY, CC BY-SA, CC BY-ND}, with `is_pmc_openaccess` |
+
+NCBI's own query for the commercial-allowed set:
+`(cc0_license[filter] OR cc_by_license[filter] OR cc_by-sa_license[filter] OR cc_by-nd_license[filter])
+AND (open_access[filter] OR author_manuscript[filter])`
+
+**Record the manifest key and its ETag, not a date.** A date label is not a pin; the manifest
+checksum is.
+
+**Archive the resulting PMCID.version list.** Article versions update continuously and articles
+are occasionally *removed*, so regeneration is not guaranteed to reproduce the same corpus. The
+list is the durable artifact, and it belongs in `fixture/`.
+
+Do not cite the `openftlist` overview page as a source: it still describes the old world and
+carries no 2026 notice.
 
 **Refinement: restrict further to CC0 and CC BY.** CC BY-ND forbids derivatives, and chunking
 articles for retrieval is arguably derivative. CC BY-SA's share-alike could propagate to the
@@ -74,8 +104,35 @@ on the one criterion that decides publishability: **it applies a licence attribu
 per-node and per-edge basis** for sources with defined licences. The licence metadata ships
 *inside the graph*, so it can be filtered programmatically and what you used can be proven.
 
-An afternoon of filtering against a 65-source legal review is not a close call for a
-two-person company.
+An afternoon of filtering against a 65-source legal review is not a close call for a small
+team.
+
+**⚠️ Two corrections to how that filter must actually be implemented, 2026-08-18.**
+
+**The TSV distribution carries no licence data, so the filter is impossible there.** Hetionet's
+own TSV README: *"It also does not include node and edge properties such as the license or
+attribution."* The repo README agrees: properties exist in JSON and Neo4j and are *absent* in
+TSV and matrix. **Use `hetnet/json/hetionet-v1.0.json.bz2`** (~155 MB, stored via Git LFS, also
+inside the Zenodo archive). Reaching for the convenient TSV makes the licence filter silently
+do nothing — the highest-consequence trap in this file.
+
+**`license` is optional per edge; `data.source` is the universal key.** The README says the
+attribute is applied *"for sources with defined licenses"* — not all of them. The sample edge
+in the repo's own JSON README carries `source`, `z_score`, `method`, `unbiased` and no
+`license` key. Every edge carries `data.source`.
+
+**So filter on `data.source` against the allowlist below, and treat `data.license` as a
+secondary lookup where present.** The allowlist is already expressed in source names, so this
+changes the mechanism, not the policy. Handle the missing-key case explicitly rather than
+letting it default to include.
+
+**Measure and report what fraction of the 2,250,197 edges actually carry `data.license`.** A
+reviewer will ask, it is a one-off parse, and the answer belongs in the published limitations.
+
+**Pin: Zenodo DOI `10.5281/zenodo.268568`** — "dhimmel/hetionet v1.0.0: Hetionet v1.0 in JSON,
+TSV, and Neo4j formats", published 2017-02-03, `dhimmel/hetionet-v1.0.0.zip`, 154,927,387 bytes.
+Note the Zenodo record sits under the former owner `dhimmel/hetionet`; the repo now lives at
+`hetio/hetionet`. Cite Himmelstein et al., *eLife* 2017, DOI `10.7554/elife.26726`.
 
 
 #### Hetionet source-licence detail — the allowlist
@@ -174,13 +231,65 @@ demographics, conditions, medications, procedures, encounters, observations.
 - **Licence: Apache-2.0** ✅ — unambiguous commercial use, redistributable
 - Exports HL7 FHIR R4, C-CDA, and CSV ✅
 - Repository actively maintained; last updated June 2026 ✅
-- **Seeded generation, so the fixture is exactly reproducible** — record the seed as a
-  pre-registration field
+- **Seeded generation — but "exactly reproducible" was too strong. Corrected 2026-08-18,
+  see below.**
 - Unlimited scale: generate 100 patients or 100,000
 - Weakness: synthetic. Coding patterns are cleaner than reality, so it likely *overstates*
   both arms. Acceptable, since it biases neither arm preferentially.
 
-Sources: https://github.com/synthetichealth/synthea · https://synthea.mitre.org/downloads
+**Version: v4.0.0**, released 2026-03-05. Minimum JDK 17 (JDK 11 support dropped), Gradle 9,
+US Core 7 in the FHIR R4 exporter.
+
+**⚠️ Trap: do not pin "latest release."** GitHub's `/releases/latest` for this repo returns a
+rolling nightly tagged `master-branch-latest`, flagged as *not* a prerelease. Pin the tag
+`v4.0.0` and record the commit SHA.
+
+#### Three seed-bearing flags, not one
+
+An earlier version of this file said "record the seed," singular. That is not enough to
+reproduce a run. In `Generator.java`, `seed`, `clinicianSeed` and `referenceTime` **all default
+to wall-clock time**.
+
+| Flag | Controls |
+|---|---|
+| `-s` | population / clinical seed — per-patient content |
+| `-cs` | **clinician seed, a separate RNG.** Set only `-s` and provider assignment still varies run to run |
+| `-r YYYYMMDD` | reference date. Not named a seed, but it is the *default value of both seeds* and anchors the simulation clock, so leaving it unset makes a run unreproducible even with both seeds fixed |
+| `-p` | population size |
+
+CSV export is **off** by default (`exporter.csv.export=false`); FHIR export is **on**. So a
+CSV-only fixture needs `--exporter.csv.export=true` and an explicit FHIR opt-out.
+
+SNOMED and RxNorm need no flag — they are the native CODE column values in `conditions.csv`
+(SNOMED-CT) and `medications.csv` (RxNorm), per the CSV File Data Dictionary. That confirms the
+concept-linkage design works off default output.
+
+#### Determinism: statistical and per-patient, NOT byte-for-byte
+
+The only claim in the docs is *"Populations generated with the same seed and the same version of
+Synthea should be identical."* The words "reproducible", "deterministic" and "byte" appear
+nowhere on that page, and **no byte-for-byte guarantee exists.**
+
+The code shows why. Patients are generated on a thread pool sized to available processors by
+default (`generate.thread_pool_size = -1`) and exported as they finish. Per-patient *content* is
+drawn from the nth value of the seeded population RNG and so is index-deterministic, but **row
+order in the shared CSV files is a function of CPU count and thread scheduling, not of the
+seed.** That alone breaks byte equality across machines.
+
+Issue #752 reports different patients from identical seeds (`-s 9 -p 2`, differing Provider
+Seeds). It is closed; the maintainer's explanation could not be loaded and is **unverified** —
+read it before citing it either way. PR #1611, *"Make default reference time precise to the
+day,"* exists so that a default-reference-time run can be reproduced with `-r`, and is still
+open.
+
+**Therefore: generate once, checksum, and archive the output in `fixture/`. Treat regeneration
+as a sanity check, not as the reproducibility mechanism.** Pin `-s`, `-cs`, `-r`, `-p`, the
+v4.0.0 tag and commit SHA, the JDK version, and set `generate.thread_pool_size = 1` to remove
+the ordering variance. Single-threading as a byte-determinism fix is an inference from the code,
+not a documented guarantee — verify it empirically before relying on it.
+
+Sources: https://github.com/synthetichealth/synthea · https://synthea.mitre.org/downloads ·
+https://github.com/synthetichealth/synthea/wiki/CSV-File-Data-Dictionary
 
 ### 🥈 Backup: MIMIC-IV Clinical Database Demo
 
@@ -411,11 +520,17 @@ Note inherits the third-party-LLM-API prohibition above.
 
 ## Recommended stack
 
-| Layer | Pick | Holds what nothing else does | Licence |
-|---|---|---|---|
-| Structured | Synthea | who has which condition, who takes which drug | Apache-2.0 ✅ |
-| Graph | **Hetionet v1.0** (OptimusKG blocked on licence) | how drugs, diseases and genes relate | CC0 + per-edge attributes ✅ |
-| Documents | PMC OA, **CC0 and CC BY only** | what the literature reports | ✅ structural filter |
+| Layer | Pick | Holds what nothing else does | Licence | Access |
+|---|---|---|---|---|
+| Structured | Synthea **v4.0.0** | who has which condition, who takes which drug | Apache-2.0 ✅ | GitHub tag + commit SHA; archive output |
+| Graph | **Hetionet v1.0** (OptimusKG blocked on licence) | how drugs, diseases and genes relate | CC0 + per-source attributes ✅ | Zenodo `10.5281/zenodo.268568`, **JSON distribution** |
+| Documents | PMC OA, **CC0 and CC BY only** | what the literature reports | ✅ per-article filter | `s3://pmc-oa-opendata` + inventory manifest |
+
+**The Access column is load-bearing and was added on 2026-08-18.** Two of the three access
+paths changed after the original evaluation: PMC's bulk packages are withdrawn on 2026-08-24,
+and Hetionet's licence filter does not work in the TSV distribution this file originally
+implied. Both are corrected in their sections above; the filtering is now per-article for PMC
+and JSON-only for Hetionet.
 
 Linkage vocabulary: **SNOMED and RxNorm** (from Synthea) → **Hetionet concept nodes** → **MeSH** (in PMC). Concepts are the shared entity set. Patients are not.
 
@@ -440,19 +555,36 @@ No single query language reaches the answer. That asymmetry is the experiment.
       and the one most likely to change the recommendation.
 - [ ] **PrimeKG licence** — read the repository licence. Commercial use permitted? Only
       matters if OptimusKG's source check fails.
-- [ ] **PMC OA commercial subset** — confirm how to filter, and filter at download.
+- [x] **PMC OA commercial subset** — ANSWERED 2026-08-18, and the answer changed. Filtering at
+      download is no longer possible; the licence groupings are not bulk packages any more.
+      Filter per article on `license_code` after pinning an S3 Inventory manifest. See the PMC
+      section. **Legacy FTP/API/Cloud access ends 2026-08-24.**
 - [ ] **Synthea Coherent notes** — read a sample. Do they contain facts absent from the
       structured records, or restate them? This decides whether the option exists at all.
 - [ ] **MIMIC-IV Demo licence** — confirm the open demo does not inherit the credentialed
       DUA's third-party-API prohibition. Only matters if you use it.
-- [ ] **Hetionet per-source licence attributes** — CC0 covers original content; upstream
-      sources carry their own terms on node and edge attributes.
+- [x] **Hetionet per-source licence attributes** — ANSWERED 2026-08-18. The attribute exists
+      but is **JSON/Neo4j only** and **optional per edge**; filter on `data.source` against the
+      allowlist, with `data.license` as a secondary lookup. Still open: measure what fraction of
+      the 2,250,197 edges carry `data.license` and report it.
 - [ ] **MTSamples licence** — only if you adopt it.
 - [ ] **SNOMED CT** — confirm Germany's member-country status if you rely on SNOMED beyond
       what Synthea already emits.
 
+- [ ] **Synthea issue #752** — read the maintainer's resolution on the "same seed, different
+      results" report. The issue body and closed state are confirmed; the explanation is not.
+- [ ] **Synthea `us_core_version` at the v4.0.0 tag** — `6.1.0` was read from `master`, but the
+      v4.0.0 notes advertise US Core 7. Check the properties file at the tag.
+- [ ] **Single-threaded byte-determinism** — confirm empirically that
+      `generate.thread_pool_size = 1` yields byte-identical output across runs. Inferred from
+      the code, not documented.
+
 Record every answer in this file. The next person to ask will be you, in four months, and
 "I think it was fine" will not be a good enough answer to publish on.
+
+**Two traps recorded because each would produce a wrong-but-plausible table entry:** Synthea's
+`/releases/latest` returns a rolling nightly rather than v4.0.0, and Hetionet's licence filter
+is impossible in the TSV distribution. Both look right and fail on replication.
 
 ---
 
