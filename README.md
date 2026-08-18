@@ -58,13 +58,21 @@ Fill before the first run. A pre-registration with blanks is not a pre-registrat
 
 **And a pre-registration nobody outside can read is not a registration.** Every rule below is
 enforced by two people who both want the answer to be yes. Pre-registration binds because it is
-filed publicly *before* results exist, so that abandoning it is visible. This repository is
-therefore made public before the first run — protocol, thresholds and decision rules first,
-results later. Publishing it after the fact would prove nothing.
+filed publicly *before* results exist, so that abandoning it is visible.
 
-Publishing now is also the cheapest it will ever be: `namespace/`, `questions/` and `results/`
-are still empty, so nothing anyone is undecided about is being disclosed, and the question of
-whether to publish the namespace stays open until it is actually due.
+> **Registered 2026-08-18.** This repository was made public at commit `087787c`, before the
+> fixture was built, before the namespace existed, and before a single question was written.
+> https://github.com/x-cean-pika/mloda_eval_cross_source
+>
+> **The proof is the empty directory, not the timestamp.** `namespace/`, `questions/` and
+> `results/` contain nothing in the public history. Anyone can verify that the thresholds, the
+> win condition, the decision rules and the deviation policy were all published before any
+> result existed to shape them. That is the whole claim, and it does not depend on trusting a
+> commit date.
+
+Publishing at this moment was also the cheapest it will ever be: with the namespace not yet
+built, nothing anyone is undecided about was disclosed, and the question of whether to publish
+the namespace itself stays open until it is actually due.
 
 | Field | Value |
 |---|---|
@@ -224,9 +232,12 @@ correctness.
 4. Agent phrases the natural-language question whose answer is that output.
 5. **Clinical reviewer** — is this a question a real person would ask, and is it medically
    coherent? ~1 hour for fifteen. Never sees the namespace or the queries.
-6. **Tom** — does the query compute what the question asks, and does answering genuinely
-   require all three sources? Needs data literacy, not clinical knowledge. Never sees the
-   namespace.
+6. **Tom Kaltofen, mloda's maintainer** — does the query compute what the question asks, and
+   does answering genuinely require all three sources? Needs data literacy, not clinical
+   knowledge. Never sees the namespace. **Disclosed plainly: this reviewer is an interested
+   party.** He is checking query logic, not correctness of the answer key, which is produced by
+   execution rather than judgement — but a reader should know the relationship rather than
+   infer it.
 7. Question set, answer key and rubric are frozen together.
 
 **Use a different model family to author than the one under test.** Same model on both sides
