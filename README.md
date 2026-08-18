@@ -47,6 +47,12 @@ Fill before the first run. A pre-registration with blanks is not a pre-registrat
 | Dataset versions + Synthea seed | |
 | API budget ceiling | |
 
+**The mloda pin is the field most likely to break the run.** mloda shipped five releases in
+three months (v0.6.3 → v0.11.0, ~180 commits in July alone). At that cadence an unpinned run
+is a run whose treatment arm changes underneath it, and the frozen namespace SHA means
+nothing if the framework beneath it moved. Pin to PyPI, never to a working copy. Freeze it,
+and do not bump it mid-experiment even for a fix that looks unrelated.
+
 **Author separation is the rule that makes the result trustworthy.** Whoever builds the
 fixture and writes the namespace, feature descriptions, and baseline data dictionary must
 never see the questions. Whoever produces the questions, answer key, and rubric never sees
@@ -110,5 +116,10 @@ All five are committed. They are the evidence.
 
 ## Status
 
-Not yet started. Design doc: `mloda_business_plans/2026-08-17-prove-the-runtime-hypothesis.md`
-(private).
+**Not yet started.** Nothing in `fixture/`, `namespace/`, `questions/`, `arms/` or `results/`.
+The blocking item is the pre-registration table above: six fields, all blank.
+
+Design doc: `mloda_business_plans/2026-08-17-prove-the-runtime-hypothesis.md` (private),
+**Revision 9** (2026-08-18). Revision 9 changed nothing in this experiment — no deliverable,
+estimate, success criterion, or decision-table row moved. It corrected the lineage/audit
+findings in the design doc after an upstream sync, and sharpened the mloda pin warning above.
